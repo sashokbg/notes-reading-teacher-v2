@@ -4,8 +4,6 @@ import {NotePitch} from "../notes/note_pitch";
 import {NoteGuess} from "./note_guess";
 
 export class NotesGuesser {
-    static MAX_NUMBER_OF_NOTES = 8;
-
     static MIN_NOTE_F = new Note(NotePitch.E, 2);
     static MAX_NOTE_F = new Note(NotePitch.E, 4);
     static MIN_NOTE_G = new Note(NotePitch.A, 3);

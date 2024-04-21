@@ -1,6 +1,4 @@
 import {Accidental, Formatter, Renderer, Stave, StaveNote, Vex, Voice} from "vexflow";
-
-const {Factory, System} = Vex.Flow;
 import {NoteGuess} from "../guesser/note_guess";
 import {Clef} from "../notes/clef";
 
@@ -9,32 +7,46 @@ export class NotesRenderer {
   constructor() {
     const div = document.getElementById("output");
     const renderer = new Renderer(div, Renderer.Backends.SVG);
-    renderer.resize(600, 600);
+    this.currentNotesToPrint = {
+      index: 0,
+      notes: []
+    }
+
+    renderer.resize(1200, 600);
+
+    this.trebles = [];
+    this.basses = [];
 
     this.context = renderer.getContext();
+    this.renderStaves();
+  }
 
-    // Create a stave of width 400 at position 10, 40 on the canvas.
-    this.treble = new Stave(60, 40, 460);
-    this.bass = new Stave(60, 140, 460);
+  renderStaves() {
+    let treble1 = new Stave(60, 40, 400);
+    let treble2 = new Stave(460, 40, 400);
+    let bass1 = new Stave(60, 140, 400);
+    let bass2 = new Stave(460, 140, 400);
+    this.trebles.push(treble1);
+    this.trebles.push(treble2);
+    this.basses.push(bass1);
+    this.basses.push(bass2);
 
-    // Add a clef and time signature.
-    this.treble.addClef("treble").addTimeSignature("4/4");
-    this.bass.addClef("bass").addTimeSignature("4/4");
+    treble1.addClef("treble").addTimeSignature("4/4");
+    bass1.addClef("bass").addTimeSignature("4/4");
 
-    // Connect it to the rendering context and draw!
-    this.treble.setContext(this.context).draw();
-    this.bass.setContext(this.context).draw();
+    treble1.setContext(this.context).draw();
+    treble2.setContext(this.context).draw();
+    bass1.setContext(this.context).draw();
+    bass2.setContext(this.context).draw();
 
-    const brace = new Vex.Flow.StaveConnector(this.treble, this.bass).setType(3);
-    const lineLeft = new Vex.Flow.StaveConnector(this.treble, this.bass).setType(1);
-    const lineRight = new Vex.Flow.StaveConnector(this.treble, this.bass).setType(6);
+    const brace = new Vex.Flow.StaveConnector(treble1, bass1).setType(3);
+    const lineLeft = new Vex.Flow.StaveConnector(treble1, bass1).setType(1);
+    const lineRight = new Vex.Flow.StaveConnector(treble2, bass2).setType(6);
 
     brace.setContext(this.context).draw();
     lineLeft.setContext(this.context).draw();
     lineRight.setContext(this.context).draw();
-
   }
-
 
   /**
    * @param {NoteGuess[]} noteGuesses
@@ -43,51 +55,57 @@ export class NotesRenderer {
     this.printIndicator(0);
     this.removeNotes();
     this.group = this.context.openGroup('', 'guess-notes');
-    let trebleNotes = [];
-    let bassNotes = [];
+    let noteCounter = 0;
 
-    for (let i = 0; i < noteGuesses.length; i++) {
-      let noteGuess = noteGuesses[i];
+    while(noteCounter < noteGuesses.length / 4) {
+      let trebleNotes = [];
+      let bassNotes = [];
 
-      let note = noteGuess.note;
-      let staveNote = new StaveNote({
-        keys: [note.getLabel()],
-        duration: "q",
-        clef: noteGuess.clef.toString()
-      });
+      for (let i = noteCounter * 4; i < noteCounter * 4 + 4; i++) {
+        let noteGuess = noteGuesses[i];
 
-      if(noteGuess.clef.equals(Clef.G)){
-        trebleNotes.push(staveNote)
-        bassNotes.push(new StaveNote({
-          keys: ['f/3'],
-          duration: 'qr',
-          clef: 'bass'
-        }))
-      } else {
-        bassNotes.push(staveNote)
-        trebleNotes.push(new StaveNote({
-          keys: ['g/4'],
-          duration: 'qr',
-          clef: 'treble'
-        }))
+        let note = noteGuess.note;
+        let staveNote = new StaveNote({
+          keys: [note.getLabel()],
+          duration: "q",
+          clef: noteGuess.clef.toString()
+        });
+
+        if(noteGuess.clef.equals(Clef.G)){
+          trebleNotes.push(staveNote)
+          bassNotes.push(new StaveNote({
+            keys: ['f/3'],
+            duration: 'qr',
+            clef: 'bass'
+          }))
+        } else {
+          bassNotes.push(staveNote)
+          trebleNotes.push(new StaveNote({
+            keys: ['g/4'],
+            duration: 'qr',
+            clef: 'treble'
+          }))
+        }
       }
+
+      const trebleVoice = new Voice({
+        num_beats: 4,
+        beat_value: 4,
+      }).addTickables(trebleNotes);
+
+      const bassVoice = new Voice({
+        num_beats: 4,
+        beat_value: 4,
+      }).addTickables(bassNotes);
+
+      new Formatter().joinVoices([trebleVoice]).format([trebleVoice], 350);
+      trebleVoice.draw(this.context, this.trebles[noteCounter]);
+
+      new Formatter().joinVoices([bassVoice]).format([bassVoice], 350);
+      bassVoice.draw(this.context, this.basses[noteCounter]);
+      noteCounter++;
     }
 
-    const trebleVoice = new Voice({
-      num_beats: 4,
-      beat_value: 4,
-    }).addTickables(trebleNotes);
-
-    const bassVoice = new Voice({
-      num_beats: 4,
-      beat_value: 4,
-    }).addTickables(bassNotes);
-
-    new Formatter().joinVoices([trebleVoice]).format([trebleVoice], 350);
-    trebleVoice.draw(this.context, this.treble);
-
-    new Formatter().joinVoices([bassVoice]).format([bassVoice], 350);
-    bassVoice.draw(this.context, this.bass);
 
     this.context.closeGroup();
   }
@@ -121,7 +139,8 @@ export class NotesRenderer {
 
     const firstRests = [];
 
-    for(let i = 0; i < currentNoteGuess; i++) {
+    let startIndex = Math.floor(currentNoteGuess / 4) * 4;
+    for(let i = startIndex; i < currentNoteGuess; i++) {
       firstRests.push(new StaveNote({
         keys: ['c/-1'],
         duration: "qr",
@@ -130,7 +149,7 @@ export class NotesRenderer {
 
     const afterRests = [];
 
-    for(let i = currentNoteGuess; i < 3; i++) {
+    for(let i = currentNoteGuess; i < startIndex + 3; i++) {
       afterRests.push(new StaveNote({
         keys: ['c/-1'],
         duration: "qr",
@@ -144,7 +163,8 @@ export class NotesRenderer {
     }).addTickables([...firstRests, staveNote, ...afterRests]);
 
     new Formatter().joinVoices([voice]).format([voice], 350);
-    voice.draw(this.context, noteGuess.clef.equals(Clef.G) ? this.treble : this.bass);
+
+    voice.draw(this.context, noteGuess.clef.equals(Clef.G) ? this.trebles[Math.floor(currentNoteGuess / 4)] : this.basses[Math.floor(currentNoteGuess / 4)]);
 
     this.context.closeGroup();
   }

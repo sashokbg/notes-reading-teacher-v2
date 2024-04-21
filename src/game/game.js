@@ -6,7 +6,7 @@ import {NoteGuessResult} from "../guesser/note_guess_result";
 import {NoteGuess} from "../guesser/note_guess";
 import {Clef} from "../notes/clef";
 
-export const MAX_NUMBER_OF_NOTES = 4;
+export const MAX_NUMBER_OF_NOTES = 8;
 
 export class Game {
   noteGuesses = [];
