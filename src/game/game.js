@@ -57,7 +57,7 @@ export class Game {
       this.currentClef = this.currentClef.next();
       const isLastNote = this.currentNoteGuess >= MAX_NUMBER_OF_NOTES;
       if (!isLastNote) {
-        // this.printer.printNoteIndicator(this.currentNoteGuess);
+        this.renderer.printIndicator(this.currentNoteGuess);
       }
 
       if(isLastNote){

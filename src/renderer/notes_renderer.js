@@ -11,7 +11,6 @@ export class NotesRenderer {
     const renderer = new Renderer(div, Renderer.Backends.SVG);
     renderer.resize(600, 600);
 
-
     this.context = renderer.getContext();
 
     // Create a stave of width 400 at position 10, 40 on the canvas.
@@ -41,6 +40,7 @@ export class NotesRenderer {
    * @param {NoteGuess[]} noteGuesses
    **/
   printNoteGuesses(noteGuesses) {
+    this.printIndicator(0);
     this.removeNotes();
     this.group = this.context.openGroup('', 'guess-notes');
     let trebleNotes = [];
@@ -155,5 +155,19 @@ export class NotesRenderer {
 
   removeMistakes(note) {
     document.getElementById('vf-' + note.getLabel())?.remove();
+  }
+
+  printIndicator(position) {
+    const svg = document.getElementById('output').getElementsByTagName('svg')[0];
+    document.getElementById("indicator")?.remove();
+
+    let offset = 140;
+    let x = offset + position * 85;
+
+    const triangle = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    triangle.setAttribute("id", "indicator");
+    triangle.setAttribute("points", `${x-5},20 ${x},50 ${x+5},20`);
+    triangle.setAttribute("fill", "red");
+    svg.appendChild(triangle);
   }
 }
