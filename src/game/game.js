@@ -1,39 +1,35 @@
 import {MidiHandler} from "../midi/midi";
 import {Note} from "../notes/note";
-import {Staff} from "./staff";
+import {NotesGuesser} from "../guesser/guesser";
+import {NotesRenderer} from "../renderer/notes_renderer";
+import {NoteGuessResult} from "../guesser/note_guess_result";
+import {NoteGuess} from "../guesser/note_guess";
 import {Clef} from "../notes/clef";
-import {NotesGuesser} from "../guesser/notes_guesser";
 
 export const MAX_NUMBER_OF_NOTES = 4;
 
 export class Game {
-
-  /** @type {Staff} **/
-  staff1 = null;
-  /** @type {Staff} **/
-  staff2 = null;
+  noteGuesses = [];
+  currentNoteGuess = 0;
+  currentClef = Clef.G;
 
   constructor() {
-    this.staff1 = new Staff(Clef.G);
-    this.staff2 = new Staff(Clef.F);
-
+    this.renderer = new NotesRenderer();
     this.notesGuesser = new NotesGuesser();
     new MidiHandler(this);
     this.advanceToNextLine();
   }
 
   advanceToNextLine() {
-    /** @type {[NoteGuess]}**/
-    const noteGuessList = [];
+    /** @type {NoteGuess[]}**/
+    this.noteGuesses = [];
+    this.currentNoteGuess = 0;
 
     for(let i = 0; i< MAX_NUMBER_OF_NOTES; i++) {
-      noteGuessList.push(this.notesGuesser.randomNote());
+      this.noteGuesses.push(this.notesGuesser.randomNote());
     }
 
-    this.staff1.advanceToNextLine(noteGuessList);
-    if (this.staff2 != null) {
-      this.staff2.advanceToNextLine(noteGuessList);
-    }
+    this.renderer.printNoteGuesses(this.noteGuesses);
   }
 
   /**
@@ -41,29 +37,39 @@ export class Game {
    * @param note
    */
   stopGuessNote(note) {
-    this.staff1.stopGuessNote(note);
-    if(this.staff2) {
-      this.staff2.stopGuessNote(note);
+    if (this.noteGuesses[this.currentNoteGuess].getNote() !== note) {
+      this.renderer.removeMistakes(note);
     }
   }
 
   /**
-   * @type {Note}
-   * @type {boolean}
-   * @param note
-   * @param forceRightGuess
+   * @param {Note} note
+   * @param {boolean} forceRightGuess
+   *
+   * @returns {NoteGuessResult} the guess result.
    */
   guessNote(note, forceRightGuess) {
-    console.log('Guessing note, ', note);
-    const result1 = this.staff1.guessNote(note, forceRightGuess);
-    let result2 = null;
-    if(this.staff2 != null){
-      result2 = this.staff2.guessNote(note, forceRightGuess);
-    }
+    if (
+      this.noteGuesses[this.currentNoteGuess].getNote().equals(note) ||
+      forceRightGuess
+    ) {
+      this.currentNoteGuess++;
+      this.currentClef = this.currentClef.next();
+      const isLastNote = this.currentNoteGuess >= MAX_NUMBER_OF_NOTES;
+      if (!isLastNote) {
+        // this.printer.printNoteIndicator(this.currentNoteGuess);
+      }
 
-    if(result1.isLastNote() || ( result2 != null && result2.isLastNote())){
-      this.advanceToNextLine();
+      if(isLastNote){
+        this.advanceToNextLine();
+      }
+
+      return new NoteGuessResult(true, isLastNote);
+    } else {
+      const noteGuess = new NoteGuess(note, this.currentClef);
+      noteGuess.setMistake(true);
+      this.renderer.printMistake(noteGuess, this.currentNoteGuess);
+      return new NoteGuessResult(false, false);
     }
   }
-
 }

@@ -56,6 +56,7 @@ export class MidiHandler {
     }
 
     this.currentDevice = midiDevicesList.length ? midiDevicesList[0] : undefined;
+    this.startLoggingMIDIInput();
   }
 
 

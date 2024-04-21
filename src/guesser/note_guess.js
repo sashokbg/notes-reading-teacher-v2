@@ -1,9 +1,13 @@
 import {Note} from '../notes/note'
+import {Clef} from "../notes/clef";
 
 export class NoteGuess {
+  /**
+   *
+   * @param {Note} note
+   * @param {Clef} clef
+   */
   constructor(note, clef) {
-
-    /** @type {Note}**/
     this.note = note;
     this.clef = clef;
     this._isMistake = false;

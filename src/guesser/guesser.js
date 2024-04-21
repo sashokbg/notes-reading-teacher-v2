@@ -58,10 +58,17 @@ export class NotesGuesser {
         return new NoteGuess(note, currentNoteClef);
     }
 
+
     getClef() {
-        if (this.initialClef === Clef.NONE) {
-            this.clef = this.clef === Clef.F ? Clef.G : Clef.F;
+        if(this.initialClef === Clef.NONE) {
+            if(this.clef === Clef.F) {
+                this.clef = Clef.G;
+            } else {
+                this.clef = Clef.F;
+            }
+            return this.clef;
+        } else {
+            return this.initialClef;
         }
-        return this.initialClef || this.clef;
     }
 }
