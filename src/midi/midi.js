@@ -1,4 +1,3 @@
-import {NoteGuess} from "../guesser/note_guess";
 import {Note} from "../notes/note"
 
 export class MidiHandler {
@@ -16,12 +15,11 @@ export class MidiHandler {
     navigator.requestMIDIAccess()
       .then((midiAccess) => {
         console.log("MIDI ready!");
-        this.midi = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
+        this.midi = midiAccess;
         this.listInputsAndOutputs(midiAccess);
-
-        this.startLoggingMIDIInput();
       })
       .catch((error) => {
+        alert('Failed to get MIDI access: ' + error);
         console.error(`Failed to get MIDI access: `, error);
       })
   }
@@ -36,7 +34,7 @@ export class MidiHandler {
     const midiDevicesList = document.getElementById("midi-devices")
       .getElementsByTagName("select").item(0);
 
-    midiDevicesList.onchange = (e) => this.onDeviceChange(e);
+    midiDevicesList.onclick = (e) => this.onDeviceChange(e);
 
     for (const entry of midiAccess.inputs) {
       const input = entry[1];
@@ -48,14 +46,15 @@ export class MidiHandler {
         ` version:'${input.version}'`,
       );
 
-      this.devices.set(input.name, input);
+      this.devices.set(input.id, input);
 
       const option = document.createElement("option");
       option.text = input.name;
+      option.value = input.id;
       midiDevicesList.add(option);
     }
 
-    this.currentDevice = midiDevicesList.length ? midiDevicesList[0] : undefined;
+    this.currentDevice = this.devices.size ? this.devices.values().next().value : undefined;
     this.startLoggingMIDIInput();
   }
 
