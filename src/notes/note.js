@@ -78,7 +78,7 @@ export class Note {
 
   equals(otherNote) {
     return this.octave === otherNote.octave &&
-      this.notePitch === otherNote.notePitch;
+      this.notePitch.compareTo(otherNote.notePitch) === 0;
   }
 
   isGreaterThan(otherNote) {

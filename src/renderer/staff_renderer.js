@@ -14,13 +14,15 @@ export class NotesRenderer {
 
     // Create a stave of width 400 at position 10, 40 on the canvas.
     this.stave = new Stave(10, 40, 400);
+    this.stave2 = new Stave(10, 140, 400);
 
     // Add a clef and time signature.
     this.stave.addClef("treble").addTimeSignature("4/4");
-    this.stave.addClef("bass").addTimeSignature("4/4");
+    this.stave2.addClef("bass").addTimeSignature("4/4");
 
     // Connect it to the rendering context and draw!
     this.stave.setContext(this.context).draw();
+    this.stave2.setContext(this.context).draw();
   }
 
 
@@ -28,7 +30,7 @@ export class NotesRenderer {
    * @type {NoteGuess[]}
    **/
   printNoteGuesses(noteGuesses) {
-    // notes = ['C#5/q','B4', 'A4', 'G#4'];
+    this.removeNotes();
     this.group = this.context.openGroup('', 'guess-notes');
     let notes = [];
 
@@ -61,21 +63,44 @@ export class NotesRenderer {
     let note = noteGuess.note;
     let staveNote = new StaveNote({
       keys: [note.getLabel()],
-      duration: "h",
-    });
+      duration: "q",
+    })
+      .setStemStyle({
+        fillStyle: '#ff0000',
+        strokeStyle: '#ff0000',
+      })
+      .setStyle({
+        shadowColor: '#ff0000',
+        fillStyle: '#ff0000',
+      });
 
-    if(note.isSharp()) {
+    if (note.isSharp()) {
       staveNote.addModifier(new Accidental('#'))
     }
 
-    let staveNote2 = new StaveNote({
-      keys: ['c/-1'],
-      duration: "hr",
-    });
+    const firstRests = [];
+
+    for(let i = 0; i < currentNoteGuess; i++) {
+      firstRests.push(new StaveNote({
+        keys: ['c/-1'],
+        duration: "qr",
+      }));
+    }
+
+    const afterRests = [];
+
+    for(let i = currentNoteGuess; i < 3; i++) {
+      afterRests.push(new StaveNote({
+        keys: ['c/-1'],
+        duration: "qr",
+      }));
+    }
+
+
     const voice = new Voice({
       num_beats: 4,
       beat_value: 4,
-    }).addTickables([staveNote2, staveNote]);
+    }).addTickables([...firstRests, staveNote, ...afterRests]);
 
     new Formatter().joinVoices([voice]).format([voice], 350);
     voice.draw(this.context, this.stave);
@@ -83,7 +108,11 @@ export class NotesRenderer {
     this.context.closeGroup();
   }
 
+  removeNotes() {
+    document.getElementById('vf-guess-notes')?.remove();
+  }
+
   removeMistakes(note) {
-    document.getElementById('vf-' + note.getLabel()).remove();
+    document.getElementById('vf-' + note.getLabel())?.remove();
   }
 }

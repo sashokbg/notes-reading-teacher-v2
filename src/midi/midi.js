@@ -8,6 +8,9 @@ export class MidiHandler {
   //  @type {Game}
   game = null;
 
+  devices = new Map()
+  currentDevice = undefined;
+
   constructor(game) {
     this.game = game;
     navigator.requestMIDIAccess()
@@ -23,7 +26,18 @@ export class MidiHandler {
       })
   }
 
+  onDeviceChange(event) {
+    this.currentDevice = this.devices.get(event.target.value);
+    console.log('Current device is', this.currentDevice);
+    this.startLoggingMIDIInput();
+  }
+
   listInputsAndOutputs(midiAccess) {
+    const midiDevicesList = document.getElementById("midi-devices")
+      .getElementsByTagName("select").item(0);
+
+    midiDevicesList.onchange = (e) => this.onDeviceChange(e);
+
     for (const entry of midiAccess.inputs) {
       const input = entry[1];
       console.log(
@@ -33,14 +47,15 @@ export class MidiHandler {
         ` name:'${input.name}'` +
         ` version:'${input.version}'`,
       );
+
+      this.devices.set(input.name, input);
+
+      const option = document.createElement("option");
+      option.text = input.name;
+      midiDevicesList.add(option);
     }
 
-    for (const entry of midiAccess.outputs) {
-      const output = entry[1];
-      console.log(
-        `Output port [type:'${output.type}'] id:'${output.id}' manufacturer:'${output.manufacturer}' name:'${output.name}' version:'${output.version}'`,
-      );
-    }
+    this.currentDevice = midiDevicesList.length ? midiDevicesList[0] : undefined;
   }
 
 
@@ -75,11 +90,12 @@ export class MidiHandler {
 
   startLoggingMIDIInput() {
     for (let [key, midiInput] of this.midi.inputs) {
-      if (midiInput.name.includes('Arturia') && midiInput.type === 'input') {
-        midiInput.onmidimessage = this.onMIDIMessage;
-        break;
+      if (midiInput.type === 'input') {
+        midiInput.onmidimessage = undefined;
       }
     }
+
+    this.currentDevice.onmidimessage = this.onMIDIMessage;
   }
 
   format(b) {

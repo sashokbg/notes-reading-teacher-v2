@@ -1,14 +1,14 @@
 export class NoteGuessResult {
   constructor(isCorrect, isLastNote) {
-    this.isCorrect = isCorrect;
-    this.isLastNote = isLastNote;
+    this._isCorrect = isCorrect;
+    this._isLastNote = isLastNote;
   }
 
   isCorrect() {
-    return this.isCorrect;
+    return this._isCorrect;
   }
 
   isLastNote() {
-    return this.isLastNote;
+    return this._isLastNote;
   }
 }

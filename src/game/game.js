@@ -15,26 +15,25 @@ export class Game {
 
   constructor() {
     this.staff1 = new Staff(Clef.G);
+    this.staff2 = new Staff(Clef.F);
 
-    this.notesGuesser = new NotesGuesser(Clef.G);
+    this.notesGuesser = new NotesGuesser();
     new MidiHandler(this);
     this.advanceToNextLine();
   }
 
   advanceToNextLine() {
-
     /** @type {[NoteGuess]}**/
     const noteGuessList = [];
-
 
     for(let i = 0; i< MAX_NUMBER_OF_NOTES; i++) {
       noteGuessList.push(this.notesGuesser.randomNote());
     }
 
     this.staff1.advanceToNextLine(noteGuessList);
-    // if (staffFragment2 != null) {
-    //   staffFragment2.advanceToNextLine(noteGuessList);
-    // }
+    if (this.staff2 != null) {
+      this.staff2.advanceToNextLine(noteGuessList);
+    }
   }
 
   /**
@@ -57,13 +56,14 @@ export class Game {
   guessNote(note, forceRightGuess) {
     console.log('Guessing note, ', note);
     const result1 = this.staff1.guessNote(note, forceRightGuess);
-    // if(staffFragment2 != null){
-    //   result2 = staffFragment2.guessNote(note, forceRightGuess);
-    // }
+    let result2 = null;
+    if(this.staff2 != null){
+      result2 = this.staff2.guessNote(note, forceRightGuess);
+    }
 
-    // if(result1.isLastNote() || ( result2 != null && result2.isLastNote())){
-    //   advanceToNextLine();
-    // }
+    if(result1.isLastNote() || ( result2 != null && result2.isLastNote())){
+      this.advanceToNextLine();
+    }
   }
 
 }
